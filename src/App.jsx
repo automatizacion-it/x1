@@ -30,6 +30,9 @@ export default function LibretaNotas() {
   };
 
   const handleDeleteNote = (indexToDelete) => {
+    const confirmDelete = window.confirm("¿Estás seguro de que deseas borrar esta nota?");
+    if (!confirmDelete) return;
+
     setNotes((prev) => {
       const updatedNotes = [...(prev[selectedLetter] || [])];
       updatedNotes.splice(indexToDelete, 1);
@@ -47,7 +50,9 @@ export default function LibretaNotas() {
           <button
             key={letter}
             onClick={() => setSelectedLetter(letter)}
-            className={`w-10 h-10 rounded-full font-bold ${selectedLetter === letter ? "bg-blue-400 text-white" : "bg-white"}`}
+            className={`w-10 h-10 rounded-full font-bold ${
+              selectedLetter === letter ? "bg-blue-400 text-white" : "bg-white"
+            }`}
           >
             {letter}
           </button>
@@ -61,7 +66,9 @@ export default function LibretaNotas() {
           {colors.map((color) => (
             <button
               key={color}
-              className={`w-8 h-8 rounded-full border-2 ${color} ${selectedColor === color ? "border-black" : "border-transparent"}`}
+              className={`w-8 h-8 rounded-full border-2 ${color} ${
+                selectedColor === color ? "border-black" : "border-transparent"
+              }`}
               onClick={() => setSelectedColor(color)}
             />
           ))}
@@ -84,7 +91,10 @@ export default function LibretaNotas() {
 
         <div className="mt-4 space-y-4">
           {(notes[selectedLetter] || []).map((note, index) => (
-            <div key={index} className={`p-4 rounded shadow ${note.color} relative`}>
+            <div
+              key={index}
+              className={`p-4 rounded shadow ${note.color} relative`}
+            >
               <div className="text-sm text-gray-600">{note.timestamp}</div>
               <div>{note.text}</div>
               <button
