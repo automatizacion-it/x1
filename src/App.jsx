@@ -29,6 +29,17 @@ export default function LibretaNotas() {
     setNewNoteText("");
   };
 
+  const handleDeleteNote = (indexToDelete) => {
+    setNotes((prev) => {
+      const updatedNotes = [...(prev[selectedLetter] || [])];
+      updatedNotes.splice(indexToDelete, 1);
+      return {
+        ...prev,
+        [selectedLetter]: updatedNotes,
+      };
+    });
+  };
+
   return (
     <div className="flex h-screen">
       <aside className="w-16 bg-gray-100 p-2 flex flex-col items-center space-y-2 overflow-y-auto">
@@ -73,9 +84,15 @@ export default function LibretaNotas() {
 
         <div className="mt-4 space-y-4">
           {(notes[selectedLetter] || []).map((note, index) => (
-            <div key={index} className={`p-4 rounded shadow ${note.color}`}>
+            <div key={index} className={`p-4 rounded shadow ${note.color} relative`}>
               <div className="text-sm text-gray-600">{note.timestamp}</div>
               <div>{note.text}</div>
+              <button
+                onClick={() => handleDeleteNote(index)}
+                className="absolute top-2 right-2 text-xs text-red-600 hover:underline"
+              >
+                Borrar
+              </button>
             </div>
           ))}
         </div>
