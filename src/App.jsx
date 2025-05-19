@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const letters = Array.from({ length: 26 }, (_, i) =>
   String.fromCharCode(65 + i)
 );
-const colors = ["notaAmarilla", "notaVerde", "notaAzul"];
+const colors = ["notaAmarilla", "notaRoja", "notaAzul"]; // Rojo, Amarillo, Azul
 
 export default function LibretaNotas() {
   const [selectedLetter, setSelectedLetter] = useState("A");
@@ -11,6 +11,10 @@ export default function LibretaNotas() {
   const [newNoteText, setNewNoteText] = useState("");
   const [selectedColor, setSelectedColor] = useState(colors[0]);
   const [darkMode, setDarkMode] = useState(false);
+
+  // Estados para modal de confirmación
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState(null);
 
   useEffect(() => {
     const savedNotes = JSON.parse(localStorage.getItem("libretaNotas")) || {};
@@ -40,9 +44,6 @@ export default function LibretaNotas() {
   };
 
   const handleDeleteNote = (indexToDelete) => {
-    const confirmar = window.confirm("¿Estás seguro de que deseas eliminar esta nota?");
-    if (!confirmar) return;
-
     setNotes((prev) => {
       const updatedNotes = [...(prev[selectedLetter] || [])];
       updatedNotes.splice(indexToDelete, 1);
@@ -94,8 +95,8 @@ export default function LibretaNotas() {
               className={`w-8 h-8 rounded-full border-2 ${
                 color === "notaAmarilla"
                   ? "bg-yellow-100"
-                  : color === "notaVerde"
-                  ? "bg-green-100"
+                  : color === "notaRoja"
+                  ? "bg-red-100"
                   : "bg-blue-100"
               } ${
                 selectedColor === color
@@ -131,23 +132,55 @@ export default function LibretaNotas() {
               className={`p-4 rounded shadow ${
                 note.color === "notaAmarilla"
                   ? "bg-yellow-100"
-                  : note.color === "notaVerde"
-                  ? "bg-green-100"
+                  : note.color === "notaRoja"
+                  ? "bg-red-100"
                   : "bg-blue-100"
               }`}
             >
               <div className="text-sm text-gray-600">{note.timestamp}</div>
               <div className="mb-2">{note.text}</div>
               <button
-                onClick={() => handleDeleteNote(index)}
-                className="text-red-600 hover:underline text-sm"
+                onClick={() => {
+                  setNoteToDelete(index);
+                  setShowConfirm(true);
+                }}
+                className="text-red-600 hover:underline text-sm flex items-center space-x-1"
               >
-                Eliminar
+                <span>🗑️</span>
+                <span>Eliminar</span>
               </button>
             </div>
           ))}
         </div>
       </main>
+
+      {/* Modal de confirmación */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg max-w-sm w-full">
+            <h2 className="text-lg font-bold mb-4">¿Eliminar nota?</h2>
+            <p className="mb-4">Esta acción no se puede deshacer.</p>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  handleDeleteNote(noteToDelete);
+                  setShowConfirm(false);
+                  setNoteToDelete(null);
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
