@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const letters = Array.from({ length: 26 }, (_, i) =>
   String.fromCharCode(65 + i)
 );
-const colors = ["notaAmarilla", "notaVerde", "notaAzul"];
+const colors = ["notaRoja", "notaAzul", "notaAmarilla"];
 
 export default function LibretaNotas() {
   const [selectedLetter, setSelectedLetter] = useState("A");
@@ -89,11 +89,11 @@ export default function LibretaNotas() {
             <button
               key={color}
               className={`w-8 h-8 rounded-full border-2 ${
-                color === "notaAmarilla"
-                  ? "bg-yellow-100"
-                  : color === "notaVerde"
-                  ? "bg-green-100"
-                  : "bg-blue-100"
+                color === "notaRoja"
+                  ? "bg-red-200"
+                  : color === "notaAzul"
+                  ? "bg-blue-200"
+                  : "bg-yellow-200"
               } ${
                 selectedColor === color
                   ? "border-black dark:border-white"
@@ -126,11 +126,11 @@ export default function LibretaNotas() {
             <div
               key={index}
               className={`p-4 rounded shadow ${
-                note.color === "notaAmarilla"
-                  ? "bg-yellow-100"
-                  : note.color === "notaVerde"
-                  ? "bg-green-100"
-                  : "bg-blue-100"
+                note.color === "notaRoja"
+                  ? "bg-red-200"
+                  : note.color === "notaAzul"
+                  ? "bg-blue-200"
+                  : "bg-yellow-200"
               }`}
             >
               <div className="text-sm text-gray-600">{note.timestamp}</div>
@@ -148,4 +148,3 @@ export default function LibretaNotas() {
     </div>
   );
 }
-
