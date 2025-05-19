@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 
-const letters = Array.from({ length: 26 }, (_, i) =>
-  String.fromCharCode(65 + i)
-);
+const letters = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
 const colors = ["notaAmarilla", "notaVerde", "notaAzul"];
 
 export default function LibretaNotas() {
@@ -11,24 +9,17 @@ export default function LibretaNotas() {
   const [newNoteText, setNewNoteText] = useState("");
   const [selectedColor, setSelectedColor] = useState(colors[0]);
   const [darkMode, setDarkMode] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState([]);
 
   useEffect(() => {
     const savedNotes = JSON.parse(localStorage.getItem("libretaNotas")) || {};
-    const savedFiles = JSON.parse(localStorage.getItem("archivosSubidos")) || [];
-    const savedTheme = localStorage.getItem("temaOscuro") === "true";
     setNotes(savedNotes);
-    setUploadedFiles(savedFiles);
+    const savedTheme = localStorage.getItem("temaOscuro") === "true";
     setDarkMode(savedTheme);
   }, []);
 
   useEffect(() => {
     localStorage.setItem("libretaNotas", JSON.stringify(notes));
   }, [notes]);
-
-  useEffect(() => {
-    localStorage.setItem("archivosSubidos", JSON.stringify(uploadedFiles));
-  }, [uploadedFiles]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
@@ -38,7 +29,7 @@ export default function LibretaNotas() {
   const handleAddNote = () => {
     if (!newNoteText.trim()) return;
     const timestamp = new Date().toLocaleString();
-    const note = { text: newNoteText, timestamp, color: selectedColor };
+    const note = { text: newNoteText, timestamp, color: selectedColor, files: [] };
     setNotes((prev) => ({
       ...prev,
       [selectedLetter]: [...(prev[selectedLetter] || []), note],
@@ -47,8 +38,7 @@ export default function LibretaNotas() {
   };
 
   const handleDeleteNote = (indexToDelete) => {
-    const confirmar = confirm("¿Estás seguro de que deseas eliminar esta nota?");
-    if (!confirmar) return;
+    if (!confirm("¿Estás seguro de que quieres eliminar esta nota?")) return;
     setNotes((prev) => {
       const updatedNotes = [...(prev[selectedLetter] || [])];
       updatedNotes.splice(indexToDelete, 1);
@@ -60,21 +50,35 @@ export default function LibretaNotas() {
   };
 
   const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files.length) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result;
-      const newFile = {
-        name: file.name,
-        type: file.type,
-        content: base64,
-        uploadedAt: new Date().toLocaleString()
+    const readerPromises = Array.from(files).map((file) => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () =>
+          resolve({
+            name: file.name,
+            type: file.type,
+            data: reader.result,
+          });
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(readerPromises).then((uploadedFiles) => {
+      const timestamp = new Date().toLocaleString();
+      const newFileNote = {
+        text: "📎 Archivos adjuntos",
+        timestamp,
+        color: "notaVerde",
+        files: uploadedFiles,
       };
-      setUploadedFiles((prev) => [...prev, newFile]);
-    };
-    reader.readAsDataURL(file);
+      setNotes((prev) => ({
+        ...prev,
+        [selectedLetter]: [...(prev[selectedLetter] || []), newFileNote],
+      }));
+    });
   };
 
   return (
@@ -99,9 +103,7 @@ export default function LibretaNotas() {
       {/* Contenido principal */}
       <main className="flex-1 p-4 overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-xl font-bold">
-            Notas para la letra "{selectedLetter}"
-          </h1>
+          <h1 className="text-xl font-bold">Notas para la letra "{selectedLetter}"</h1>
           <button
             onClick={() => setDarkMode(!darkMode)}
             className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-700"
@@ -140,12 +142,21 @@ export default function LibretaNotas() {
           placeholder="Escribe una nota..."
         />
 
-        <button
-          onClick={handleAddNote}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Agregar Nota
-        </button>
+        {/* Botones */}
+        <div className="flex space-x-2 mb-4">
+          <button
+            onClick={handleAddNote}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Agregar Nota
+          </button>
+          <input
+            type="file"
+            multiple
+            onChange={handleFileUpload}
+            className="bg-white dark:bg-gray-800 text-black dark:text-white file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded file:bg-blue-100 dark:file:bg-blue-800 file:text-sm file:text-blue-700 dark:file:text-white"
+          />
+        </div>
 
         {/* Lista de notas */}
         <div className="mt-4 space-y-4">
@@ -162,36 +173,36 @@ export default function LibretaNotas() {
             >
               <div className="text-sm text-gray-600">{note.timestamp}</div>
               <div className="mb-2">{note.text}</div>
+
+              {note.files?.length > 0 && (
+                <ul className="mb-2 space-y-1">
+                  {note.files.map((file, i) => (
+                    <li key={i}>
+                      <a
+                        href={file.data}
+                        download={file.name}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-700 underline"
+                      >
+                        📎 {file.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
               <button
                 onClick={() => handleDeleteNote(index)}
                 className="text-red-600 hover:underline text-sm"
               >
-                🗑️ Eliminar
+                Eliminar
               </button>
             </div>
           ))}
-        </div>
-
-        {/* Subida de archivos */}
-        <div className="mt-6">
-          <h2 className="text-lg font-bold mb-2">Subir archivo</h2>
-          <input
-            type="file"
-            onChange={handleFileUpload}
-            className="mb-4"
-            accept="*/*"
-          />
-
-          <h3 className="text-md font-semibold">Archivos subidos:</h3>
-          <ul className="list-disc list-inside">
-            {uploadedFiles.map((file, index) => (
-              <li key={index}>
-                {file.name} ({file.type}) - <span className="text-sm text-gray-600">{file.uploadedAt}</span>
-              </li>
-            ))}
-          </ul>
         </div>
       </main>
     </div>
   );
 }
+
